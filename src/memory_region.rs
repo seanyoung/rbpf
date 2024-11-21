@@ -64,10 +64,18 @@ pub struct MemoryRegion {
     pub vm_gap_shift: u8,
     /// Whether the region is readonly, writable or must be copied before writing
     pub state: Cell<MemoryState>,
+    /// Is the contents of the region an account
+    pub is_account: bool,
 }
 
 impl MemoryRegion {
-    fn new(slice: &[u8], vm_addr: u64, vm_gap_size: u64, state: MemoryState) -> Self {
+    fn new(
+        slice: &[u8],
+        vm_addr: u64,
+        vm_gap_size: u64,
+        state: MemoryState,
+        is_account: bool,
+    ) -> Self {
         let mut vm_addr_end = vm_addr.saturating_add(slice.len() as u64);
         let mut vm_gap_shift = (std::mem::size_of::<u64>() as u8)
             .saturating_mul(8)
@@ -84,6 +92,7 @@ impl MemoryRegion {
             len: slice.len() as u64,
             vm_gap_shift,
             state: Cell::new(state),
+            is_account,
         }
     }
 
@@ -94,29 +103,46 @@ impl MemoryRegion {
         vm_gap_size: u64,
         state: MemoryState,
     ) -> Self {
-        Self::new(slice, vm_addr, vm_gap_size, state)
+        Self::new(slice, vm_addr, vm_gap_size, state, false)
     }
 
     /// Creates a new readonly MemoryRegion from a slice
     pub fn new_readonly(slice: &[u8], vm_addr: u64) -> Self {
-        Self::new(slice, vm_addr, 0, MemoryState::Readable)
+        Self::new(slice, vm_addr, 0, MemoryState::Readable, false)
     }
 
     /// Creates a new writable MemoryRegion from a mutable slice
     pub fn new_writable(slice: &mut [u8], vm_addr: u64) -> Self {
-        Self::new(&*slice, vm_addr, 0, MemoryState::Writable)
+        Self::new(&*slice, vm_addr, 0, MemoryState::Writable, false)
     }
 
     /// Creates a new copy on write MemoryRegion.
     ///
     /// The region is made writable
     pub fn new_cow(slice: &[u8], vm_addr: u64, cow_id: u64) -> Self {
-        Self::new(slice, vm_addr, 0, MemoryState::Cow(cow_id))
+        Self::new(slice, vm_addr, 0, MemoryState::Cow(cow_id), false)
+    }
+
+    /// Creates a new readonly MemoryRegion from a slice containing account data
+    pub fn new_readonly_account(slice: &[u8], vm_addr: u64) -> Self {
+        Self::new(slice, vm_addr, 0, MemoryState::Readable, true)
+    }
+
+    /// Creates a new writable MemoryRegion from a mutable slice containing account data
+    pub fn new_writable_account(slice: &mut [u8], vm_addr: u64) -> Self {
+        Self::new(&*slice, vm_addr, 0, MemoryState::Writable, true)
+    }
+
+    /// Creates a new copy on write MemoryRegion.
+    ///
+    /// The region is made writable
+    pub fn new_cow_account(slice: &[u8], vm_addr: u64, cow_id: u64) -> Self {
+        Self::new(slice, vm_addr, 0, MemoryState::Cow(cow_id), true)
     }
 
     /// Creates a new writable gapped MemoryRegion from a mutable slice
     pub fn new_writable_gapped(slice: &mut [u8], vm_addr: u64, vm_gap_size: u64) -> Self {
-        Self::new(&*slice, vm_addr, vm_gap_size, MemoryState::Writable)
+        Self::new(&*slice, vm_addr, vm_gap_size, MemoryState::Writable, false)
     }
 
     /// Convert a virtual machine address into a host address
