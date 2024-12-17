@@ -29,6 +29,7 @@ macro_rules! translate_memory_access {
         ) {
             ProgramResult::Ok(v) => v,
             ProgramResult::Err(err) => {
+                println!("MEMORY ACCESS: {err:?}");
                 throw_error!($self, err);
             },
         }
@@ -41,6 +42,7 @@ macro_rules! translate_memory_access {
 
     // MemoryMapping::store()
     ($self:ident, store, $value:expr, $vm_addr:ident, $T:ty) => {
+        println!("STORE: vm_addr:{:x} value:{:x}", $vm_addr, $value);
         translate_memory_access!(_impl, $self, store, $vm_addr, $T, ($value) as $T);
     };
 }
