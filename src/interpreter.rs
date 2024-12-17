@@ -187,6 +187,10 @@ impl<'a, 'b, C: ContextObject> Interpreter<'a, 'b, C> {
             self.vm.context_object_pointer.trace(self.reg);
         }
 
+        let x = crate::disasm::disassemble_instruction(&insn, self.reg[11] as usize, self.executable.get_function_registry(), self.executable.get_loader(),  self.executable.get_sbpf_version());
+
+        println!("DISASM {x}");
+
         match insn.opc {
             ebpf::LD_DW_IMM if !self.executable.get_sbpf_version().disable_lddw() => {
                 ebpf::augment_lddw_unchecked(self.program, &mut insn);

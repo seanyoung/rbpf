@@ -30,6 +30,7 @@ mod asm_parser;
 pub mod assembler;
 #[cfg(feature = "debugger")]
 pub mod debugger;
+pub mod disasm;
 pub mod disassembler;
 pub mod ebpf;
 pub mod elf;
