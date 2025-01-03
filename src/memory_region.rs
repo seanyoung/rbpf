@@ -137,6 +137,7 @@ impl MemoryRegion {
         let gap_mask = (-1i64).checked_shl(self.vm_gap_shift as u32).unwrap_or(0) as u64;
         let gapped_offset =
             (begin_offset & gap_mask).checked_shr(1).unwrap_or(0) | (begin_offset & !gap_mask);
+        println!("XX vm_to_host: {vm_addr:#x}/{len} is_in_gap:{is_in_gap} gap_mask:{gap_mask} gapped_offset:{gapped_offset}");
         if let Some(end_offset) = gapped_offset.checked_add(len) {
             if end_offset <= self.len && !is_in_gap {
                 return ProgramResult::Ok(self.host_addr.get().saturating_add(gapped_offset));
